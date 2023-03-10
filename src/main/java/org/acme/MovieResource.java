@@ -5,44 +5,28 @@ import javax.transaction.Transactional;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Path("/movie")
 public class MovieResource {
 
     @Inject
-    MovieRepository repository;
-
-
+    MovieService service;
 
     @GET()
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getMovies(){
-        List<Movie> movies=repository.listAll();
+    public Response getMovies() {
+        List<Movie> movies = service.getMovies();
         return Response.ok(movies).build();
-
-    }
-
-    @GET
-    @Path("/size")
-    @Produces(MediaType.TEXT_PLAIN)
-    public long countMovies(){
-        return repository.count();
 
     }
 
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
-    @Transactional
-    public Response createMovie(Movie newMovie){
-        Movie movie= new Movie();
-        movie.setName(newMovie.getName());
-        repository.persist(movie);
-        if (repository.isPersistent(movie)) {
+    public Response createMovie(Movie newMovie) {
+        boolean saved = service.create(newMovie);
+        if (saved) {
             return Response.ok("Saved").build();
         }
         return Response.status(Response.Status.BAD_REQUEST).build();
@@ -52,30 +36,25 @@ public class MovieResource {
     @Path("{id}/{name}")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
-    @Transactional
     public Response updateMovie(
             @PathParam("id") Long id,
-            @PathParam("name") String name){
-
-            Movie movie=repository.findById(id);
-
-            movie.setName(name);
-            repository.persist(movie);
-            if (repository.isPersistent(movie)) {
-                return Response.ok("Updated").build();
-
-            }
-            return Response.status(Response.Status.BAD_REQUEST).build();
+            @PathParam("name") String name) {
+        boolean updated = service.update(id, name);
+        if (updated) {
+            return Response.ok("Updated").build();
+        }
+        return Response.status(Response.Status.BAD_REQUEST).build();
     }
 
     @DELETE
     @Path("{id}")
     @Consumes(MediaType.APPLICATION_JSON)
-    public Response deleteMovie(@PathParam("id") Long id){
-
-        boolean removed=repository.deleteById(id);
-        if (removed){
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response deleteMovie(@PathParam("id") Long id) {
+        boolean removed = service.delete(id);
+        if (removed) {
             return Response.ok("Deleted").build();
+
         }
 
         return Response.status(Response.Status.NOT_FOUND).build();
