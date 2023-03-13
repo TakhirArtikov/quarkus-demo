@@ -1,9 +1,9 @@
-package org.acme;
+package org.acme.security.repository;
 
 import io.quarkus.hibernate.orm.panache.PanacheRepository;
 
 import javax.enterprise.context.ApplicationScoped;
 
 @ApplicationScoped
-public class MovieRepository implements PanacheRepository<Movie> {
+public class UserRepository implements PanacheRepository {
 }
